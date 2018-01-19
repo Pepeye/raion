@@ -9,8 +9,7 @@ import (
 	"time"
 
 	// third party packages
-
-	"github.com/Pepeye/raion/resources"
+	"github.com/Pepeye/raion/api/users"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -51,7 +50,7 @@ func main() {
 	// public routes
 	app.Get("/", handlerFn)
 	// app.Get("/user/{id}", u.GetUser)
-	app.Mount("/users", resources.Users{}.Routes())
+	app.Mount("/users", users.Resource{}.Routes())
 
 	// start server
 	// defer http.ListenAndServe(":3001", app)
