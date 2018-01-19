@@ -9,10 +9,12 @@ import (
 	"time"
 
 	// third party packages
-	"github.com/Pepeye/raion/models"
+
+	"github.com/Pepeye/raion/resources"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	mgo "gopkg.in/mgo.v2"
 )
 
 const appname string = "raion"
@@ -48,7 +50,8 @@ func main() {
 
 	// public routes
 	app.Get("/", handlerFn)
-	app.Get("/user/{id}", getUser)
+	// app.Get("/user/{id}", u.GetUser)
+	app.Mount("/users", resources.Users{}.Routes())
 
 	// start server
 	// defer http.ListenAndServe(":3001", app)
@@ -57,6 +60,14 @@ func main() {
 	if err != nil {
 		log.Fatal("Serving: ", err)
 	}
+}
+
+func getSession() *mgo.Session {
+	s, err := mgo.Dial("mongodb:localhost")
+	if err != nil {
+		panic(err)
+	}
+	return s
 }
 
 func handlerFn(res http.ResponseWriter, req *http.Request) {
@@ -71,18 +82,4 @@ func handlerFn(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 	json.NewEncoder(res).Encode(msg)
-}
-
-func getUser(res http.ResponseWriter, req *http.Request) {
-	id := chi.URLParam(req, "id")
-	user := models.User{
-		Name:   "Goose Gander",
-		Gender: "Age",
-		Age:    35,
-		ID:     string(id),
-	}
-
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-	render.JSON(res, req, user)
 }
