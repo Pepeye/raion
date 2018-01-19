@@ -43,7 +43,7 @@ func (rs Users) Routes() chi.Router {
 func (rs Users) Get(res http.ResponseWriter, req *http.Request) {
 	id := chi.URLParam(req, "id")
 	user := UserSchema{
-		// ID: bson.ObjectId
+		ID:     bson.NewObjectId(),
 		Name:   "John Appleseed",
 		Gender: "Age",
 		Age:    35,
@@ -59,6 +59,7 @@ func (rs Users) Get(res http.ResponseWriter, req *http.Request) {
 func (rs Users) Create(res http.ResponseWriter, req *http.Request) {
 	id, _ := uuid.NewV4()
 	user := UserSchema{
+		ID:     bson.NewObjectId(),
 		UUID:   id.String(),
 		Name:   "Susan Appleseed",
 		Age:    33,
