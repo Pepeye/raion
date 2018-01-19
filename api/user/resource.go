@@ -60,8 +60,7 @@ func (rs Resource) Create(w http.ResponseWriter, r *http.Request) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
-		// render.JSON(w, r, user)
-		render.JSON(w, r, map[string]string{"message": "failed to create user"})
+		render.JSON(w, r, map[string]error{"message": err})
 		return
 	}
 
