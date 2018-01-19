@@ -9,7 +9,8 @@ import (
 	"time"
 
 	// third party packages
-	"github.com/Pepeye/raion/api/users"
+
+	"github.com/Pepeye/raion/api/user"
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
@@ -47,10 +48,12 @@ func main() {
 	app.Use(middleware.URLFormat)
 	app.Use(render.SetContentType(render.ContentTypeJSON))
 
+	// get resources and set data session
+	users := user.Resource{Session: getSession()}
+
 	// public routes
 	app.Get("/", handlerFn)
-	// app.Get("/user/{id}", u.GetUser)
-	app.Mount("/users", users.Resource{}.Routes())
+	app.Mount("/users", users.Routes())
 
 	// start server
 	// defer http.ListenAndServe(":3001", app)

@@ -1,4 +1,4 @@
-package users
+package user
 
 import "gopkg.in/mgo.v2/bson"
 
