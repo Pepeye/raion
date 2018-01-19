@@ -7,18 +7,23 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	uuid "github.com/satori/go.uuid"
+	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // UserSchema Struct
 type UserSchema struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Gender string `json:"gender"`
-	Age    int    `json:"age"`
+	ID     bson.ObjectId `json:"id" bson:"_id"`
+	UUID   string        `json:"uuid" bson:"uuid"`
+	Name   string        `json:"name" bson:"name"`
+	Gender string        `json:"gender" bson:"gender"`
+	Age    int           `json:"age" bson:"age"`
 }
 
 // Users resource struct definition
-type Users struct{}
+type Users struct {
+	session *mgo.Session
+}
 
 // Routes creates a REST router for user resource
 func (rs Users) Routes() chi.Router {
@@ -38,10 +43,11 @@ func (rs Users) Routes() chi.Router {
 func (rs Users) Get(res http.ResponseWriter, req *http.Request) {
 	id := chi.URLParam(req, "id")
 	user := UserSchema{
+		// ID: bson.ObjectId
 		Name:   "John Appleseed",
 		Gender: "Age",
 		Age:    35,
-		ID:     string(id),
+		UUID:   string(id),
 	}
 
 	res.Header().Set("Content-Type", "application/json")
@@ -53,7 +59,7 @@ func (rs Users) Get(res http.ResponseWriter, req *http.Request) {
 func (rs Users) Create(res http.ResponseWriter, req *http.Request) {
 	id, _ := uuid.NewV4()
 	user := UserSchema{
-		ID:     id.String(),
+		UUID:   id.String(),
 		Name:   "Susan Appleseed",
 		Age:    33,
 		Gender: "female",
