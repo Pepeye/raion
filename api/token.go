@@ -1,4 +1,4 @@
-package resources
+package api
 
 // AuthToken struct
 type AuthToken struct {
