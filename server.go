@@ -69,6 +69,8 @@ func getSession() *mgo.Session {
 	if err != nil {
 		panic(err)
 	}
+
+	s.SetMode(mgo.Monotonic, true)
 	return s
 }
 
