@@ -1,11 +1,11 @@
 package user
 
 import (
+	// stdlib packages
 	"encoding/json"
 	"net/http"
 
 	// Third party packages
-
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	uuid "github.com/satori/go.uuid"
@@ -69,15 +69,7 @@ func (rs Resource) List(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, users)
 }
 
-// func validateObjectID(idParamStr string) (oid bson.ObjectId, err map[string]string) {
-// 	if !bson.IsObjectIdHex(idParamStr) {
-// 		err = map[string]string{"message": "invalid :id parameter provided"}
-// 		return
-// 	}
-// 	oid = bson.ObjectIdHex(idParamStr)
-// 	return
-// }
-
+// helper function to validate ObjectId or render error
 func validateObjectID(idParamStr string, w http.ResponseWriter, r *http.Request) (oid bson.ObjectId) {
 	if !bson.IsObjectIdHex(idParamStr) {
 		w.WriteHeader(http.StatusBadRequest)
