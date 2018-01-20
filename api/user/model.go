@@ -7,6 +7,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+const resourceName string = "users"
+
 // Schema Struct
 type Schema struct {
 	ID     bson.ObjectId `json:"id" bson:"_id"`
@@ -26,7 +28,7 @@ func init() {
 	}
 
 	// fetch collection
-	col := db.DB("raion").C("users")
+	col := db.DB("raion").C(resourceName)
 
 	index := mgo.Index{
 		Key:        []string{"uuid"},
@@ -41,5 +43,5 @@ func init() {
 		panic(err)
 	}
 
-	fmt.Println("[raion]: create database indexes for resource [users]")
+	fmt.Printf("[raion]: create database indexes for resource - %s\n", resourceName)
 }
