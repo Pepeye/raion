@@ -133,3 +133,26 @@ func (rs Resource) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	render.JSON(w, r, user)
 }
+
+// Delete removes an individual user resource
+func (rs Resource) Delete(w http.ResponseWriter, r *http.Request) {
+	// set response type once
+	w.Header().Set("Content-Type", "application/json")
+
+	id := chi.URLParam(r, "id")
+	if !bson.IsObjectIdHex(id) {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
+		return
+	}
+
+	oid := bson.ObjectIdHex(id)
+	if err := rs.Session.DB("raion").C("users").RemoveId(oid); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "unable to delete user from database"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	render.JSON(w, r, map[string]string{"message": "user deleted from database", "deleteduserid": id})
+}
