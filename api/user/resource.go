@@ -21,15 +21,23 @@ type Resource struct {
 // Get retrieves an individual user resource
 func (rs Resource) Get(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	user := Schema{
-		ID:     bson.NewObjectId(),
-		Name:   "John Appleseed",
-		Gender: "Age",
-		Age:    35,
-		UUID:   string(id),
+	// set response header once
+	w.Header().Set("Content-Type", "application/json")
+	if !bson.IsObjectIdHex(id) {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
+		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	oid := bson.ObjectIdHex(id)
+	user := Schema{}
+
+	if err := rs.Session.DB("raion").C("users").FindId(oid).One(&user); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		render.JSON(w, r, map[string]string{"message": "user not found"})
+		return
+	}
+
 	w.WriteHeader(http.StatusOK)
 	render.JSON(w, r, user)
 }
