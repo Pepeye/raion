@@ -92,3 +92,36 @@ func (rs Resource) List(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	render.JSON(w, r, users)
 }
+
+// Update updates an individual user resource
+func (rs Resource) Update(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	// set response header once
+	w.Header().Set("Content-Type", "application/json")
+	if !bson.IsObjectIdHex(id) {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
+		return
+	}
+
+	oid := bson.ObjectIdHex(id)
+	data := Schema{}
+	user := Schema{}
+
+	if err := rs.Session.DB("raion").C("users").FindId(oid).One(&user); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		render.JSON(w, r, map[string]string{"message": "user not found"})
+		return
+	}
+
+	json.NewDecoder(r.Body).Decode(&data)
+	if err := rs.Session.DB("raion").C("users").UpdateId(oid, data); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "unable to update user"})
+		return
+	}
+	// get modified user from database
+	rs.Session.DB("raion").C("users").FindId(oid).One(&user)
+	w.WriteHeader(http.StatusOK)
+	render.JSON(w, r, user)
+}
