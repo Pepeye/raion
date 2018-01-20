@@ -76,3 +76,19 @@ func (rs Resource) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	render.JSON(w, r, user)
 }
+
+// List retrieves a list of user resources
+func (rs Resource) List(w http.ResponseWriter, r *http.Request) {
+	// set response header once
+	w.Header().Set("Content-Type", "application/json")
+	users := []Schema{}
+
+	if err := rs.Session.DB("raion").C("users").Find(bson.M{}).All(&users); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		render.JSON(w, r, map[string]string{"message": "unable to find users"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	render.JSON(w, r, users)
+}

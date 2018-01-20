@@ -10,7 +10,7 @@ func (rs Resource) Routes() chi.Router {
 	r := chi.NewRouter()
 
 	// add middleware specific to user Routes
-
+	r.Get("/", rs.List)    // GET /users
 	r.Post("/", rs.Create) // POST /users
 	r.Route("/{id}", func(r chi.Router) {
 		r.Get("/", rs.Get) // GET /users/{id}
