@@ -44,7 +44,7 @@ func (rs Resource) Get(w http.ResponseWriter, r *http.Request) {
 
 // Create creates a new user resource
 func (rs Resource) Create(w http.ResponseWriter, r *http.Request) {
-	id, _ := uuid.NewV4()
+	id := uuid.NewV4()
 	user := Schema{
 		ID:   bson.NewObjectId(),
 		UUID: id.String(),
@@ -95,33 +95,41 @@ func (rs Resource) List(w http.ResponseWriter, r *http.Request) {
 
 // Update updates an individual user resource
 func (rs Resource) Update(w http.ResponseWriter, r *http.Request) {
+	user := Schema{}
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "no updated user data was sent"})
+		return
+	}
+
 	id := chi.URLParam(r, "id")
-	// set response header once
-	w.Header().Set("Content-Type", "application/json")
 	if !bson.IsObjectIdHex(id) {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
 		return
 	}
 
 	oid := bson.ObjectIdHex(id)
-	data := Schema{}
-	user := Schema{}
-
-	if err := rs.Session.DB("raion").C("users").FindId(oid).One(&user); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		render.JSON(w, r, map[string]string{"message": "user not found"})
-		return
+	query := bson.M{"_id": oid}
+	data := bson.M{
+		"$set": bson.M{
+			"name":   user.Name,
+			"gender": user.Gender,
+			"age":    user.Age,
+		},
 	}
 
-	json.NewDecoder(r.Body).Decode(&data)
-	if err := rs.Session.DB("raion").C("users").UpdateId(oid, data); err != nil {
+	if err := rs.Session.DB("raion").C("users").Update(query, data); err != nil {
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		render.JSON(w, r, map[string]string{"message": "unable to update user"})
 		return
 	}
 	// get modified user from database
 	rs.Session.DB("raion").C("users").FindId(oid).One(&user)
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	render.JSON(w, r, user)
 }
