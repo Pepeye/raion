@@ -18,30 +18,6 @@ type Resource struct {
 	Session *mgo.Session
 }
 
-// Get retrieves an individual user resource
-func (rs Resource) Get(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	// set response header once
-	w.Header().Set("Content-Type", "application/json")
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(http.StatusBadRequest)
-		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
-		return
-	}
-
-	oid := bson.ObjectIdHex(id)
-	user := Schema{}
-
-	if err := rs.Session.DB("raion").C("users").FindId(oid).One(&user); err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		render.JSON(w, r, map[string]string{"message": "user not found"})
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	render.JSON(w, r, user)
-}
-
 // Create creates a new user resource
 func (rs Resource) Create(w http.ResponseWriter, r *http.Request) {
 	id := uuid.NewV4()
@@ -93,25 +69,58 @@ func (rs Resource) List(w http.ResponseWriter, r *http.Request) {
 	render.JSON(w, r, users)
 }
 
+// func validateObjectID(idParamStr string) (oid bson.ObjectId, err map[string]string) {
+// 	if !bson.IsObjectIdHex(idParamStr) {
+// 		err = map[string]string{"message": "invalid :id parameter provided"}
+// 		return
+// 	}
+// 	oid = bson.ObjectIdHex(idParamStr)
+// 	return
+// }
+
+func validateObjectID(idParamStr string, w http.ResponseWriter, r *http.Request) (oid bson.ObjectId) {
+	if !bson.IsObjectIdHex(idParamStr) {
+		w.WriteHeader(http.StatusBadRequest)
+		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
+		return
+	}
+	oid = bson.ObjectIdHex(idParamStr)
+	return
+}
+
+// Get retrieves an individual user resource
+func (rs Resource) Get(w http.ResponseWriter, r *http.Request) {
+	// set response header once
+	w.Header().Set("Content-Type", "application/json")
+
+	id := chi.URLParam(r, "id")
+	oid := validateObjectID(id, w, r)
+	user := Schema{}
+
+	if err := rs.Session.DB("raion").C("users").FindId(oid).One(&user); err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		render.JSON(w, r, map[string]string{"message": "user not found"})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	render.JSON(w, r, user)
+}
+
 // Update updates an individual user resource
 func (rs Resource) Update(w http.ResponseWriter, r *http.Request) {
+	// set response header once
+	w.Header().Set("Content-Type", "application/json")
+
 	user := Schema{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		render.JSON(w, r, map[string]string{"message": "no updated user data was sent"})
 		return
 	}
 
 	id := chi.URLParam(r, "id")
-	if !bson.IsObjectIdHex(id) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
-		return
-	}
-
-	oid := bson.ObjectIdHex(id)
+	oid := validateObjectID(id, w, r)
 	query := bson.M{"_id": oid}
 	data := bson.M{
 		"$set": bson.M{
@@ -122,7 +131,6 @@ func (rs Resource) Update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := rs.Session.DB("raion").C("users").Update(query, data); err != nil {
-		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		render.JSON(w, r, map[string]string{"message": "unable to update user"})
 		return
@@ -140,13 +148,7 @@ func (rs Resource) Delete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	id := chi.URLParam(r, "id")
-	if !bson.IsObjectIdHex(id) {
-		w.WriteHeader(http.StatusBadRequest)
-		render.JSON(w, r, map[string]string{"message": "invalid :id parameter provided"})
-		return
-	}
-
-	oid := bson.ObjectIdHex(id)
+	oid := validateObjectID(id, w, r)
 	if err := rs.Session.DB("raion").C("users").RemoveId(oid); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		render.JSON(w, r, map[string]string{"message": "unable to delete user from database"})
