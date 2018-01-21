@@ -1,6 +1,10 @@
+# Source code
 vendor
 node_modules
 *.log
 
 # Executables | Binaries
 main
+
+# Editor settings
+.vscode

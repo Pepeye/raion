@@ -64,6 +64,7 @@ func main() {
 	}
 }
 
+// connect to mongodb
 func getSession() *mgo.Session {
 	s, err := mgo.Dial("mongodb://localhost")
 	if err != nil {
